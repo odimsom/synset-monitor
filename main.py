@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 app = FastAPI(title="SynsetMonitor", version=__version__)
 
@@ -24,6 +24,8 @@ ADMIN_USER = os.getenv("ADMIN_USER", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
 JWT_SECRET = os.getenv("JWT_SECRET", "supersecretjwtkey_change_me")
 ALGORITHM = "HS256"
+
+TARGET_SERVICES = os.getenv("TARGET_SERVICES", "http://localhost:8000/").split(",")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -47,6 +49,28 @@ def login(data: LoginData):
         token = jwt.encode({"sub": data.username, "exp": expiration}, JWT_SECRET, algorithm=ALGORITHM)
         return {"access_token": token, "token_type": "bearer"}
     raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+
+import urllib.request
+import urllib.error
+
+@app.get("/metrics/health")
+def get_healthchecks(authorized: bool = Depends(verify_token)):
+    results = []
+    for url in TARGET_SERVICES:
+        url = url.strip()
+        if not url: continue
+        try:
+            start = time.time()
+            req = urllib.request.Request(url, headers={'User-Agent': 'SynsetMonitor/1.2'})
+            with urllib.request.urlopen(req, timeout=3) as response:
+                elapsed = round((time.time() - start) * 1000)
+                results.append({"url": url, "status": str(response.getcode()), "latency_ms": elapsed})
+        except urllib.error.HTTPError as e:
+            elapsed = round((time.time() - start) * 1000)
+            results.append({"url": url, "status": str(e.code), "latency_ms": elapsed})
+        except Exception as e:
+            results.append({"url": url, "status": "Down", "latency_ms": 0})
+    return results
 
 @app.get("/metrics/system")
 def get_system_metrics(authorized: bool = Depends(verify_token)):
@@ -88,6 +112,22 @@ def get_system_metrics(authorized: bool = Depends(verify_token)):
 
     # Network
     net = psutil.net_io_counters()
+    
+    # Disk IO
+    disk_io_info = None
+    try:
+        d = psutil.disk_io_counters()
+        if d:
+            disk_io_info = {
+                "rcount": getattr(d, 'read_count', 0),
+                "wcount": getattr(d, 'write_count', 0),
+                "rbytes": getattr(d, 'read_bytes', 0),
+                "wbytes": getattr(d, 'write_bytes', 0),
+                "rtime": getattr(d, 'read_time', 0),
+                "wtime": getattr(d, 'write_time', 0)
+            }
+    except Exception:
+        pass
 
     # Top processes
     procs = []
@@ -99,7 +139,6 @@ def get_system_metrics(authorized: bool = Depends(verify_token)):
             
     # Sort by cpu usage roughly
     top_cpu = sorted(procs, key=lambda x: x.get('cpu_percent') or 0, reverse=True)[:5]
-    # Format memory percent dynamically
     for p in top_cpu:
         p['cpu_percent'] = round(p.get('cpu_percent') or 0, 1)
         p['memory_percent'] = round(p.get('memory_percent') or 0, 1)
@@ -145,6 +184,7 @@ def get_system_metrics(authorized: bool = Depends(verify_token)):
             "free": to_gb(disk.free),
             "percent": disk.percent
         },
+        "disk_io": disk_io_info,
         "uptime": uptime_seconds,
         "load_avg": load_avg,
         "procs_count": active_procs,
@@ -163,6 +203,7 @@ def get_docker_metrics(authorized: bool = Depends(verify_token)):
         res = []
         for c in containers:
             started_at = c.attrs.get('State', {}).get('StartedAt', '')
+            restarts = c.attrs.get('RestartCount', 0)
             tags = c.image.tags
             image_name = tags[0] if tags else c.image.id[:12]
             
@@ -183,6 +224,7 @@ def get_docker_metrics(authorized: bool = Depends(verify_token)):
             res.append({
                 "name": c.name,
                 "state": c.status,
+                "restarts": restarts,
                 "image": image_name,
                 "uptime": started_at,
                 "ports": ports_str or "Ninguno"

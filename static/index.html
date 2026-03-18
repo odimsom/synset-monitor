@@ -62,7 +62,7 @@
         /* Sidebar */
         .sidebar {
             width: 250px; background: var(--sidebar-bg); border-right: 1px solid #2a2a2a;
-            display: flex; flex-direction: column; z-index: 100;
+            display: flex; flex-direction: column; z-index: 100; flex-shrink: 0;
         }
         .sidebar-header {
             padding: 20px; border-bottom: 1px solid #2a2a2a;
@@ -96,12 +96,12 @@
             padding: 15px 25px; border-bottom: 1px solid #2a2a2a; background: var(--bg);
             display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; 
         }
-        header h1 { font-size: 20px; color: #fff; }
+        header h1 { font-size: 20px; color: #fff; margin:0;}
         
         .header-actions { display: flex; align-items: center; gap: 15px; }
         .module-badge { padding: 4px 8px; background: #222; border-radius: 4px; font-size: 11px; color: var(--text-muted); border: 1px solid #333;}
         
-        #logout-btn { background: transparent; color: var(--text-muted); padding: 6px 15px; border: 1px solid #333; font-weight: normal; font-size: 13px; margin: 0; width: auto; }
+        #logout-btn { background: transparent; color: var(--text-muted); padding: 6px 15px; border: 1px solid #333; font-weight: normal; font-size: 13px; margin: 0; width: auto; border-radius: 4px;}
         #logout-btn:hover { border-color: var(--accent); color: var(--accent); }
 
         /* Views */
@@ -132,6 +132,8 @@
             display: grid; grid-template-columns: repeat(3, 1fr); 
             gap: 15px; margin-bottom: 20px; flex-shrink: 0; 
         }
+        .metrics-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+        
         .card { 
             background: var(--card); border-radius: 6px; padding: 18px 20px; 
             border-left: 3px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
@@ -186,7 +188,7 @@
             font-size: 12px; color: var(--text-muted); flex-shrink: 0; background: var(--bg);
         }
 
-        /* Scrollbar styling */
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
@@ -197,7 +199,7 @@
 </head>
 <body>
 
-    <!-- Login Screen -->
+    <!-- Login Dialog -->
     <div id="login-screen">
         <div class="login-box">
             <h2>⏣ SynsetMonitor</h2>
@@ -216,27 +218,23 @@
         </div>
     </div>
 
-    <!-- App Layout -->
+    <!-- App Main Layout -->
     <div id="app-layout">
         
-        <!-- Sidebar Navigation -->
         <nav class="sidebar">
             <div class="sidebar-header">
                 <h2>⏣ Synset</h2>
             </div>
             <div class="nav-menu">
                 <div class="nav-item active" data-target="view-dashboard">Dashboard General</div>
-                <div class="nav-item" data-target="view-system">Deep System <span class="module-badge">v1.1</span></div>
-                <!-- Future Modules placeholders -->
-                <!-- <div class="nav-item">Deep Docker</div> -->
-                <!-- <div class="nav-item">Advanced Network</div> -->
+                <div class="nav-item" data-target="view-system">Deep System</div>
+                <div class="nav-item" data-target="view-services">Servicios y Docker <span class="module-badge">v1.2</span></div>
             </div>
             <div class="sidebar-footer">
-                v1.1.0 Modular Edition
+                v1.2.0 Modular Edition
             </div>
         </nav>
 
-        <!-- Main Content -->
         <main class="main-content">
             <header>
                 <h1 id="view-title">Dashboard General</h1>
@@ -247,8 +245,6 @@
             </header>
             
             <div id="api-error" class="error-msg">Perdida la conexión con el Host. Reintentando...</div>
-
-            <!-- Smart Alerts Tray -->
             <div id="alerts-tray"></div>
 
             <!-- VIEW: General Dashboard -->
@@ -290,29 +286,15 @@
                 </div>
 
                 <div class="layout-lower">
-                    <div class="tables-grid">
-                        <div class="section">
-                            <div class="section-header">Contenedores Docker</div>
-                            <div class="table-container">
-                                <table>
-                                    <thead><tr><th>Nombre</th><th>Estado</th><th>Imagen</th><th>Puertos</th></tr></thead>
-                                    <tbody id="docker-tbody">
-                                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="section">
-                            <div class="section-header">Top 5 Procesos (CPU & RAM)</div>
-                            <div class="table-container">
-                                <table>
-                                    <thead><tr><th>PID</th><th>Nombre</th><th>CPU %</th><th>RAM %</th></tr></thead>
-                                    <tbody id="top-tbody">
-                                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="section">
+                        <div class="section-header">Top 5 Procesos (CPU & RAM)</div>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>PID</th><th>Nombre</th><th>CPU %</th><th>RAM %</th></tr></thead>
+                                <tbody id="top-tbody">
+                                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                     <div class="section logs-section">
@@ -325,54 +307,86 @@
             <!-- VIEW: Deep System Module -->
             <div id="view-system" class="view">
                 <style> .alert-text { color: var(--warning); font-weight: bold;} .danger-text { color: var(--danger); font-weight: bold;} </style>
-                <div class="metrics-grid">
+                <div class="metrics-grid cols-4">
                     <div class="card">
-                        <h3>CPU IO Wait (Cuello Secundario)</h3>
+                        <h3>CPU IO Wait</h3>
                         <div class="metric-value" id="sys-iowait">0.0%</div>
-                        <div class="metric-subtitle">Si supera el 10% el disco es lento</div>
+                        <div class="metric-subtitle">Cuello de botella en disco</div>
                     </div>
                     <div class="card">
-                        <h3>CPU Steal Time (VM Lag)</h3>
+                        <h3>CPU Steal Time</h3>
                         <div class="metric-value" id="sys-steal">0.0%</div>
-                        <div class="metric-subtitle">Vecinos de VPS consumiendo tu CPU real</div>
+                        <div class="metric-subtitle">Retraso de Hypervisor (VM)</div>
                     </div>
                     <div class="card">
-                        <h3>CPU Load Status</h3>
-                        <div class="metric-value" id="sys-loadstatus">Normal</div>
-                        <div class="metric-subtitle" id="sys-loadsub">Basado en Load vs Cores</div>
-                    </div>
-                    <div class="card">
-                        <h3>Swap Memory Total</h3>
+                        <h3>Swap total Usada</h3>
                         <div class="metric-value" id="sys-swap-used">0.0 GB</div>
                         <div class="metric-subtitle" id="sys-swap-sub">De 0.0 GB Total</div>
                         <div class="progress-bg"><div class="progress-fill" id="sys-swap-bar"></div></div>
                     </div>
                     <div class="card">
-                        <h3>Swap Paging In (Lectura)</h3>
-                        <div class="metric-value" id="sys-sin">0 b/s</div>
-                        <div class="metric-subtitle">Bytes del disco a RAM</div>
+                        <h3>Load Status</h3>
+                        <div class="metric-value" id="sys-loadstatus">Normal</div>
+                        <div class="metric-subtitle">Estado de sobrecarga</div>
                     </div>
                     <div class="card">
-                        <h3>Swap Paging Out (Escritura)</h3>
+                        <h3>Swap Paging In</h3>
+                        <div class="metric-value" id="sys-sin">0 b/s</div>
+                        <div class="metric-subtitle">Lectura Swap a RAM</div>
+                    </div>
+                    <div class="card">
+                        <h3>Swap Paging Out</h3>
                         <div class="metric-value" id="sys-sout">0 b/s</div>
-                        <div class="metric-subtitle">Bytes de la RAM al disco</div>
+                        <div class="metric-subtitle">Escritura RAM a Swap</div>
+                    </div>
+                    <div class="card">
+                        <h3>Disk IOPS</h3>
+                        <div class="metric-value" id="sys-iops">Calculando...</div>
+                        <div class="metric-subtitle">L/E Operaciones por seg.</div>
+                    </div>
+                    <div class="card">
+                        <h3>Disk Latency</h3>
+                        <div class="metric-value" id="sys-latency">0 ms</div>
+                        <div class="metric-subtitle">Latencia Media de Lectura</div>
                     </div>
                 </div>
-                <div class="section flex-grow-1" style="flex-grow: 1;">
-                    <div class="section-header">Diagnósticos Inteligentes</div>
-                    <div class="table-container" style="color: var(--text-muted); font-size: 13px; line-height: 1.6; padding: 10px;">
-                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 15px;">
-                            <li><strong style="color: #fff;">¿Qué es IO Wait?</strong> Indica el tiempo que el procesador está inactivo esperando a que un disco conteste. Si ves una carga de sistema ralentizada pero el CPU usage normal, el problema es IO Wait Alto.</li>
-                            <li><strong style="color: #fff;">¿Qué es Swap Paging?</strong> Cuando la RAM física está llena, el sistema operativo usa el disco (Swap). Un volumen alto de Swap IN / OUT constantes es una emergencia de rendimiento.</li>
-                            <li><strong style="color: #fff;">¿Qué es CPU Steal Time?</strong> Exclusivo de servidores virtuales (VPS / Cloud). Es la cantidad de tiempo de CPU hipervisor que los hostings te están robando o dando a otras máquinas vecinas.</li>
-                        </ul>
+            </div>
+
+            <!-- VIEW: Servicios y Docker Module -->
+            <div id="view-services" class="view">
+                <div class="layout-lower">
+                    <!-- Tables Side by Side -->
+                    <div class="tables-grid">
+                        <div class="section">
+                            <div class="section-header">SLA & Health Checks de Servicios</div>
+                            <div class="table-container">
+                                <table>
+                                    <thead><tr><th>Endpoint URL</th><th>Est. HTTP</th><th>Latencia Real</th></tr></thead>
+                                    <tbody id="health-tbody">
+                                        <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando SLA Checks...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-header">Contenedores Docker Críticos</div>
+                            <div class="table-container">
+                                <table>
+                                    <thead><tr><th>Nombre</th><th>Estado</th><th>Reinicios</th><th>Puertos</th></tr></thead>
+                                    <tbody id="docker-tbody">
+                                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <footer>
                 <span id="last-refresh">Última actualización: --:--:--</span>
-                <span>Version Modular 1.1.0</span>
+                <span>Version Modular 1.2.0</span>
             </footer>
         </main>
     </div>
@@ -390,9 +404,9 @@
         let refreshInterval;
         let lastNet = { bytes_sent: 0, bytes_recv: 0, time: 0 };
         let lastSwap = { sin: 0, sout: 0, time: 0 };
-        let activeAlerts = new Set(); // To prevent spam
+        let lastDisk = { rcount: 0, wcount: 0, rtime: 0, wtime: 0, time: 0 };
+        let activeAlerts = new Set(); 
 
-        // Auth
         const getToken = () => localStorage.getItem('synset_token');
         const setToken = (token) => localStorage.setItem('synset_token', token);
         const clearToken = () => localStorage.removeItem('synset_token');
@@ -419,7 +433,6 @@
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
             loginError.style.display = 'none';
-            
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
@@ -445,14 +458,12 @@
         // Sidebar Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                // Update active nav
                 document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
                 item.classList.add('active');
                 
-                // Update title
-                document.getElementById('view-title').textContent = item.childNodes[0].nodeValue.trim();
+                let title = item.childNodes[0].nodeValue.trim();
+                document.getElementById('view-title').textContent = title;
 
-                // Swap views
                 const target = item.getAttribute('data-target');
                 document.querySelectorAll('.view').forEach(v => {
                     v.classList.remove('active');
@@ -461,7 +472,6 @@
             });
         });
 
-        // API Fetch Wrapper
         async function fetchAPI(endpoint) {
             const token = getToken();
             if(!token) { showLogin(); return null; }
@@ -483,7 +493,6 @@
             }
         }
 
-        // Helpers
         function formatUptime(seconds) {
             const d = Math.floor(seconds / (3600*24));
             const h = Math.floor(seconds % (3600*24) / 3600);
@@ -491,50 +500,35 @@
             if(d > 0) return `${d}d ${h}h ${m}m`;
             return `${h}h ${m}m`;
         }
-
         function formatBytes(bytes) {
-            if (bytes === 0) return '0 B';
+            if (bytes === 0 || isNaN(bytes)) return '0 B';
             const k = 1024, dm = 2, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i] + '/s';
         }
 
-        // Smart Alerts Function
         function triggerAlert(id, title, msg, type = 'danger') {
-            if (activeAlerts.has(id)) return; // Prevents spamming
-
+            if (activeAlerts.has(id)) return; 
             activeAlerts.add(id);
             const tray = document.getElementById('alerts-tray');
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert-toast ${type}`;
-            alertDiv.innerHTML = `
-                <div><strong>${title}</strong><br><span style="color:#ddd">${msg}</span></div>
-                <button class="alert-close">&times;</button>
-            `;
-            
-            // Auto remove after 8 seconds
-            const t = setTimeout(() => closeAlert(), 8000);
-            
+            alertDiv.innerHTML = `<div><strong>${title}</strong><br><span style="color:#ddd">${msg}</span></div><button class="alert-close">&times;</button>`;
             const closeAlert = () => {
                 alertDiv.style.animation = 'fadeOut 0.3s forwards';
                 setTimeout(() => { alertDiv.remove(); activeAlerts.delete(id); }, 300);
-                clearTimeout(t);
             };
-            
+            setTimeout(closeAlert, 8000);
             alertDiv.querySelector('.alert-close').addEventListener('click', closeAlert);
-            
             tray.prepend(alertDiv);
-            if(tray.children.length > 3) tray.lastChild.remove(); // Keep max 3 alerts visible
+            if(tray.children.length > 5) tray.lastChild.remove(); 
         }
 
-        // Main Data Load Process
         async function loadData() {
             try {
-                // System Metrics -> affects General & Deep System
+                // System Metrics
                 const sysRes = await fetchAPI('/metrics/system');
                 if (sysRes && sysRes.ok) {
                     const sys = await sysRes.json();
-                    
-                    // -- DASHBOARD GENERAL --
                     
                     // CPU + Temp
                     document.getElementById('cpu-val').textContent = sys.cpu.usage + '%';
@@ -542,7 +536,6 @@
                     cpuBar.style.width = sys.cpu.usage + '%';
                     document.getElementById('cpu-sub').textContent = sys.cpu.temp !== null ? `Temperatura: ${sys.cpu.temp}°C` : 'Temperatura: N/A';
                     
-                    // CPU Smart Alerts Color Modifiers
                     document.getElementById('card-cpu').className = 'card ' + (sys.cpu.usage > 90 ? 'card-danger' : (sys.cpu.usage > 70 ? 'card-warning' : ''));
                     cpuBar.className = 'progress-fill ' + (sys.cpu.usage > 90 ? 'danger' : (sys.cpu.usage > 70 ? 'warning' : ''));
                     if(sys.cpu.usage > 85) triggerAlert('cpu_high', 'CPU Crítico', `Uso sostenido en ${sys.cpu.usage}%`);
@@ -563,11 +556,8 @@
                     document.getElementById('disk-bar').style.width = sys.disk.percent + '%';
                     if(sys.disk.percent > 95) triggerAlert('disk_high', 'Almacenamiento Crítico', `Partición casi llena (${sys.disk.percent}%)`);
 
-                    // Uptime & Load Avg
                     document.getElementById('uptime-val').textContent = formatUptime(sys.uptime);
                     document.getElementById('uptime-sub').textContent = `Load Avg: ${sys.load_avg.join(', ')}`;
-
-                    // Procs
                     document.getElementById('procs-val').textContent = sys.procs_count;
 
                     // Network Calculation
@@ -583,56 +573,67 @@
                     lastNet.bytes_recv = sys.network.bytes_recv;
                     lastNet.time = now;
 
-
-                    // -- DEEP SYSTEM MODULE --
-                    
-                    // IOWait
+                    // Deep System
                     const ioW = document.getElementById('sys-iowait');
                     ioW.textContent = sys.cpu.iowait.toFixed(1) + '%';
-                    if(sys.cpu.iowait > 15) {
+                    if(sys.cpu.iowait > 20) {
                         ioW.className = 'metric-value danger-text';
-                        triggerAlert('iowait_high', 'Alarma IO Wait', `El disco está colapsando (IO Wait ${sys.cpu.iowait.toFixed(1)}%)`);
+                        triggerAlert('iowait_high', 'Alarma IO Wait', `El disco colapsa (IO Wait ${sys.cpu.iowait.toFixed(1)}%)`);
                     } else if (sys.cpu.iowait > 5) {
                         ioW.className = 'metric-value alert-text';
                     } else ioW.className = 'metric-value';
 
-                    // Steal Time
                     document.getElementById('sys-steal').textContent = sys.cpu.steal.toFixed(1) + '%';
                     if(sys.cpu.steal > 5) {
                         document.getElementById('sys-steal').className = 'metric-value danger-text';
-                        triggerAlert('steal_high', 'CPU Steal Activo', `El Hipervisor está robando ciclos (${sys.cpu.steal.toFixed(1)}%)`);
+                        triggerAlert('steal_high', 'CPU Steal Activo', `El Hipervisor roba ciclos (${sys.cpu.steal.toFixed(1)}%)`);
                     } else document.getElementById('sys-steal').className = 'metric-value';
                     
-                    // Deep Swap
                     document.getElementById('sys-swap-used').textContent = sys.swap.used + ' GB';
                     document.getElementById('sys-swap-sub').textContent = `Swap Ocupada: ${sys.swap.percent}% de ${sys.swap.total} GB Total`;
                     document.getElementById('sys-swap-bar').style.width = sys.swap.percent + '%';
                     if(sys.swap.percent > 50) {
                         document.getElementById('sys-swap-bar').className = 'progress-fill danger';
-                        triggerAlert('swap_pressure', 'Presión de Swap Crítica', `Dependencia profunda en disco (${sys.swap.percent}%)`);
+                        triggerAlert('swap_pressure', 'Presión Swap', `Dependencia profunda a disco (${sys.swap.percent}%)`);
                     }
 
-                    // Swap IO Paging Rates
                     if (lastSwap.time !== 0) {
                         const s_el = (now - lastSwap.time) / 1000;
-                        const sinRate = (sys.swap.sin - lastSwap.sin) / s_el;
-                        const soutRate = (sys.swap.sout - lastSwap.sout) / s_el;
-                        document.getElementById('sys-sin').textContent = formatBytes(sinRate);
-                        document.getElementById('sys-sout').textContent = formatBytes(soutRate);
+                        document.getElementById('sys-sin').textContent = formatBytes((sys.swap.sin - lastSwap.sin) / s_el);
+                        document.getElementById('sys-sout').textContent = formatBytes((sys.swap.sout - lastSwap.sout) / s_el);
                     }
                     lastSwap.sin = sys.swap.sin;
                     lastSwap.sout = sys.swap.sout;
                     lastSwap.time = now;
 
-                    // Load Status heuristic
-                    const coresApprox = sys.procs_count / 30; // Roughly guessing context
+                    // Disk IOPS & Latency
+                    if (sys.disk_io) {
+                        if (lastDisk.time !== 0) {
+                            const d_el = (now - lastDisk.time) / 1000;
+                            const r_iops = (sys.disk_io.rcount - lastDisk.rcount) / d_el;
+                            const w_iops = (sys.disk_io.wcount - lastDisk.wcount) / d_el;
+                            document.getElementById('sys-iops').textContent = `${(r_iops + w_iops).toFixed(1)} op/s`;
+                            
+                            const r_ops_diff = sys.disk_io.rcount - lastDisk.rcount;
+                            if (r_ops_diff > 0) {
+                                const lat = (sys.disk_io.rtime - lastDisk.rtime) / r_ops_diff;
+                                document.getElementById('sys-latency').textContent = `${lat.toFixed(1)} ms`;
+                            } else {
+                                document.getElementById('sys-latency').textContent = `0 ms`;
+                            }
+                        }
+                        lastDisk.rcount = sys.disk_io.rcount;
+                        lastDisk.wcount = sys.disk_io.wcount;
+                        lastDisk.rtime = sys.disk_io.rtime;
+                        lastDisk.wtime = sys.disk_io.wtime;
+                        lastDisk.time = now;
+                    }
+
                     const load1m = sys.load_avg[0];
                     if (load1m > 10.0) document.getElementById('sys-loadstatus').innerHTML = '<span class="danger-text">Sistema Sobrecargado</span>';
                     else if (load1m > 4.0) document.getElementById('sys-loadstatus').innerHTML = '<span class="alert-text">Carga Elevada</span>';
                     else document.getElementById('sys-loadstatus').innerHTML = 'Normal';
 
-
-                    // Top Processes Logic
                     const topBody = document.getElementById('top-tbody');
                     if (sys.top_procs && sys.top_procs.length > 0) {
                         topBody.innerHTML = sys.top_procs.map(p => `
@@ -646,6 +647,25 @@
                     }
                 }
 
+                // Health checks SLA
+                const healthRes = await fetchAPI('/metrics/health');
+                if (healthRes && healthRes.ok) {
+                    const healths = await healthRes.json();
+                    const tbody = document.getElementById('health-tbody');
+                    if(Array.isArray(healths)) {
+                         tbody.innerHTML = healths.map(h => {
+                             let color = h.status === '200' ? 'var(--accent)' : 'var(--danger)';
+                             if (h.status !== '200' && h.status !== 'Down') triggerAlert(`health_${h.url}`, 'Alerta SLA API', `El servicio en ${h.url} contestó ${h.status}`);
+                             if (h.status === 'Down') triggerAlert(`health_${h.url}_down`, 'Servicio Desconectado', `Fallida conexión a ${h.url}`);
+                             return `<tr>
+                                 <td>${h.url}</td>
+                                 <td><span style="color:${color}; font-weight:bold">${h.status}</span></td>
+                                 <td>${h.latency_ms} ms</td>
+                             </tr>`;
+                         }).join('');
+                    }
+                }
+
                 // Docker Metrics
                 const dockerRes = await fetchAPI('/metrics/docker');
                 if (dockerRes && dockerRes.ok) {
@@ -654,21 +674,16 @@
                     if (dockers && dockers.error) {
                          tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--danger); padding: 15px;">Error: ${dockers.error}</td></tr>`;
                     } else if (Array.isArray(dockers)) {
-                        tbody.innerHTML = dockers.map(c => `
-                            <tr>
+                        tbody.innerHTML = dockers.map(c => {
+                            if(c.restarts > 5 && c.state === 'running') triggerAlert(`docker_loop_${c.name}`, 'Crash Loop Docker', `Contenedor ${c.name} se reinició ${c.restarts} veces.`);
+                            if(c.state === 'exited') triggerAlert(`docker_dead_${c.name}`, 'Servicio Caído', `Contenedor ${c.name} inactivo.`);
+                            return `<tr>
                                 <td><strong>${c.name.substring(0,20)}</strong></td>
                                 <td><span class="status-badge ${c.state === 'running' ? 'status-running' : 'status-exited'}">${c.state}</span></td>
-                                <td style="color:#aaa">${c.image}</td>
-                                <td>${c.ports}</td>
-                            </tr>
-                        `).join('') || '<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 15px;">No containers</td></tr>';
-                        
-                        // Smart Alert: check if any container exited
-                        dockers.forEach(c => {
-                            if (c.state === 'exited' || c.state === 'dead') {
-                                triggerAlert(`docker_${c.name}`, 'Servicio Caído', `Contenedor ${c.name} está inactivo.`);
-                            }
-                        });
+                                <td style="color:${c.restarts > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight:bold;">${c.restarts}</td>
+                                <td style="color:#aaa">${c.ports}</td>
+                            </tr>`;
+                        }).join('') || '<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 15px;">No containers</td></tr>';
                     }
                 }
 
@@ -677,21 +692,18 @@
                 if (logsRes && logsRes.ok) {
                     const logs = await logsRes.json();
                     const logsCont = document.getElementById('logs-container');
-                    
                     const isAtBottom = logsCont.scrollHeight - logsCont.clientHeight <= logsCont.scrollTop + 5;
                     logsCont.textContent = logs.join('\n');
                     if (isAtBottom) logsCont.scrollTop = logsCont.scrollHeight;
                     
-                    // Smart Alerts: Parser de Eventos
                     logs.forEach(l => {
                         const checkLower = l.toLowerCase();
-                        if (checkLower.includes('oomkilled') || checkLower.includes('out of memory')) triggerAlert('log_oom', 'OOM Killer Triggered', 'Memoria exhausta detectada en logs.');
-                        if (checkLower.includes('segfault')) triggerAlert('log_seg', 'Segmentation Fault', 'Crash crítico reportado en kernel/logs.');
-                        if (checkLower.includes('connection refused')) triggerAlert('log_conn', 'Servicios Inaccesibles', 'Errores de "Connection Refused" activos.');
+                        if (checkLower.includes('oomkilled') || checkLower.includes('out of memory')) triggerAlert('log_oom', 'OOM Killer Triggered', 'Memoria exhausta detectada.');
+                        if (checkLower.includes('segfault')) triggerAlert('log_seg', 'Segmentation Fault', 'Crash crítico reportado en logs.');
+                        if (checkLower.includes('connection refused')) triggerAlert('log_conn', 'Error Conexión', 'Varias "Connection Refused" en syslogs.');
                     });
                 }
 
-                // Footer Update
                 const d = new Date();
                 document.getElementById('last-refresh').textContent = `Última actualización: ${d.toLocaleTimeString()}`;
 
