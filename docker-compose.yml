@@ -1,12 +1,7 @@
-version: '3.8'
-
 services:
   synset-monitor:
     build: .
-    image: synset-monitor:latest
-    container_name: synset-monitor
     restart: always
-    network_mode: host
     env_file:
       - .env
     volumes:
@@ -19,3 +14,9 @@ services:
       - PROCFS_PATH=/host/proc
       - HOST_ROOTFS=/rootfs
       - HOST_LOG_DIR=/host/var/log
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
