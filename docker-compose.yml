@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  synset-monitor:
+    build: .
+    image: synset-monitor:latest
+    container_name: synset-monitor
+    restart: always
+    network_mode: host
+    env_file:
+      - .env
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /var/log:/host/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PROCFS_PATH=/host/proc
+      - HOST_ROOTFS=/rootfs
+      - HOST_LOG_DIR=/host/var/log

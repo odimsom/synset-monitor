@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+psutil
+docker
+PyJWT
+python-dotenv
+pydantic
