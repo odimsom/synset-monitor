@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 app = FastAPI(title="SynsetMonitor", version=__version__)
 
@@ -104,11 +104,35 @@ def get_system_metrics(authorized: bool = Depends(verify_token)):
         p['cpu_percent'] = round(p.get('cpu_percent') or 0, 1)
         p['memory_percent'] = round(p.get('memory_percent') or 0, 1)
 
+    # v1.1.0 Deep System Metrics
+    iowait = 0.0
+    val_steal = 0.0
+    if hasattr(psutil, "cpu_times_percent"):
+        try:
+            cput = psutil.cpu_times_percent(interval=None)
+            iowait = getattr(cput, "iowait", 0.0)
+            val_steal = getattr(cput, "steal", 0.0)
+        except Exception:
+            pass
+
+    try:
+        swap = psutil.swap_memory()
+        swap_info = {
+            "total": round(swap.total / (1024**3), 2),
+            "used": round(swap.used / (1024**3), 2),
+            "percent": swap.percent,
+            "sin": getattr(swap, "sin", 0),
+            "sout": getattr(swap, "sout", 0)
+        }
+    except Exception:
+        swap_info = {"total": 0, "used": 0, "percent": 0, "sin": 0, "sout": 0}
+
     def to_gb(bytes_val):
         return round(bytes_val / (1024**3), 2)
 
     return {
-        "cpu": {"usage": cpu, "temp": temp_c},
+        "cpu": {"usage": cpu, "temp": temp_c, "iowait": iowait, "steal": val_steal},
+        "swap": swap_info,
         "ram": {
             "total": to_gb(ram.total),
             "used": to_gb(ram.used),

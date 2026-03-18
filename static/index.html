@@ -3,42 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynsetMonitor | Dashboard</title>
+    <title>SynsetMonitor | Dashboard Modular</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%2300ff88%22>⏣</text></svg>">
     <style>
         :root {
             --bg: #0f0f0f;
-            --card: #1a1a1a;
+            --sidebar-bg: #151515;
+            --card: #1c1c1c;
             --accent: #00ff88;
             --text: #e0e0e0;
             --text-muted: #888888;
             --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --danger: #ff5555;
+            --warning: #ffb86c;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body { 
             background: var(--bg); color: var(--text); font-family: var(--font); 
-            height: 100vh; overflow: hidden; /* Force dashboard to fit 1080p without body scroll */
+            height: 100vh; overflow: hidden; display: flex;
         }
         
         h1, h2, h3 { font-weight: 500; }
-        
-        .container { 
-            height: 100%; display: flex; flex-direction: column; 
-            max-width: 1400px; margin: 0 auto; padding: 10px 20px; 
-        }
 
         /* Login Screen */
         #login-screen {
             position: fixed; inset: 0;
             background: var(--bg);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 100;
+            z-index: 2000;
         }
         .login-box {
             background: var(--card); padding: 40px; border-radius: 8px; width: 350px;
             border-top: 4px solid var(--accent);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin: auto;
         }
         .login-box h2 { text-align: center; margin-bottom: 30px; color: var(--accent); }
         .input-group { margin-bottom: 20px; }
@@ -53,29 +52,93 @@
             border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
         button:hover { filter: brightness(1.2); }
-        #login-error { color: #ff5555; text-align: center; margin-top: 15px; font-size: 14px; display: none; }
+        #login-error { color: var(--danger); text-align: center; margin-top: 15px; font-size: 14px; display: none; }
 
-        /* Dashboard Layout */
-        #dashboard { display: none; }
+        /* App Layout */
+        #app-layout {
+            display: none; width: 100%; height: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px; background: var(--sidebar-bg); border-right: 1px solid #2a2a2a;
+            display: flex; flex-direction: column; z-index: 100;
+        }
+        .sidebar-header {
+            padding: 20px; border-bottom: 1px solid #2a2a2a;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .sidebar-header h2 { color: var(--accent); font-size: 20px; margin: 0; }
+        .nav-menu {
+            display: flex; flex-direction: column; padding: 15px 10px; gap: 5px; flex-grow: 1;
+        }
+        .nav-item {
+            padding: 12px 15px; border-radius: 6px; cursor: pointer; color: var(--text-muted);
+            font-size: 14px; font-weight: 500; transition: border-left 0.2s, background 0.2s, color 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: #1f1f1f; color: #fff; }
+        .nav-item.active {
+            background: rgba(0, 255, 136, 0.08); color: var(--accent);
+            border-left: 3px solid var(--accent);
+        }
+        .sidebar-footer {
+            padding: 20px; font-size: 11px; color: #555; border-top: 1px solid #2a2a2a;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1; display: flex; flex-direction: column; position: relative;
+            background: var(--bg); height: 100%; min-width: 0;
+        }
         
         header { 
-            padding-bottom: 10px; margin-bottom: 15px; border-bottom: 1px solid #333; 
+            padding: 15px 25px; border-bottom: 1px solid #2a2a2a; background: var(--bg);
             display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; 
         }
-        header h1 { color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 20px; }
-        #logout-btn { background: transparent; color: var(--text-muted); width: auto; font-weight: normal; border: 1px solid #333; padding: 4px 12px; border-radius: 4px; font-size: 13px; }
+        header h1 { font-size: 20px; color: #fff; }
+        
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .module-badge { padding: 4px 8px; background: #222; border-radius: 4px; font-size: 11px; color: var(--text-muted); border: 1px solid #333;}
+        
+        #logout-btn { background: transparent; color: var(--text-muted); padding: 6px 15px; border: 1px solid #333; font-weight: normal; font-size: 13px; margin: 0; width: auto; }
         #logout-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-        /* Grid 2x3 metrics */
+        /* Views */
+        .view {
+            display: none; flex-direction: column; flex-grow: 1; 
+            padding: 20px 25px; overflow-y: auto; overflow-x: hidden;
+        }
+        .view.active { display: flex; }
+
+        /* Smart Alerts Tray */
+        #alerts-tray {
+            position: fixed; top: 80px; right: 25px; width: 320px; z-index: 1000;
+            display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+        }
+        .alert-toast {
+            background: #2a0a0a; border-left: 4px solid var(--danger); color: #fff;
+            padding: 12px 15px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            font-size: 13px; animation: slideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: auto;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .alert-toast.warning { background: #2a1f0a; border-left-color: var(--warning); }
+        .alert-close { cursor: pointer; color: #aaa; background: none; border: none; font-size: 14px; padding: 0 0 0 10px; width: auto; }
+        @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateX(20px); } }
+
+        /* Grid metrics */
         .metrics-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); 
-            gap: 15px; margin-bottom: 15px; flex-shrink: 0; min-height: 220px;
+            display: grid; grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; margin-bottom: 20px; flex-shrink: 0; 
         }
         .card { 
-            background: var(--card); border-radius: 6px; padding: 15px 20px; 
+            background: var(--card); border-radius: 6px; padding: 18px 20px; 
             border-left: 3px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
             display: flex; flex-direction: column; justify-content: center; 
         }
+        .card.card-danger { border-left-color: var(--danger); }
+        .card.card-warning { border-left-color: var(--warning); }
         .card h3 { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; margin-top: 0; }
         .metric-value { font-size: 28px; font-weight: bold; margin-bottom: 5px; color: #fff; }
         .metric-subtitle { font-size: 12px; color: var(--text-muted); }
@@ -83,52 +146,53 @@
         /* Progress Bar */
         .progress-bg { background: #333; height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; width: 100%; }
         .progress-fill { background: var(--accent); height: 100%; width: 0%; transition: width 0.5s ease-out; }
+        .progress-fill.danger { background: var(--danger); }
+        .progress-fill.warning { background: var(--warning); }
 
-        /* Tables & Logs section container */
+        /* Layout Combinations */
         .layout-lower {
-            display: flex; flex-direction: column; flex-grow: 1; gap: 15px; min-height: 0; /* Ensures flex children can shrink */
+            display: flex; flex-direction: column; flex-grow: 1; gap: 20px; min-height: 0;
         }
-
         .tables-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-            flex-shrink: 0; height: 30vh; /* Dynamic relative height */
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+            flex-shrink: 0; height: 32vh;
         }
         .section { 
-            background: var(--card); border-radius: 6px; padding: 12px 15px; 
+            background: var(--card); border-radius: 6px; padding: 15px 18px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden; 
         }
-        .section-header { margin-bottom: 10px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 8px; flex-shrink: 0;}
+        .section-header { margin-bottom: 12px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; flex-shrink: 0;}
         
         .table-container { overflow-y: auto; flex-grow: 1; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { padding: 8px 10px; border-bottom: 1px solid #2a2a2a; }
+        th, td { padding: 9px 10px; border-bottom: 1px solid #2a2a2a; }
         th { color: var(--accent); font-weight: 500; font-size: 13px; position: sticky; top: 0; background: var(--card); }
         td { font-size: 13px; }
-        .status-badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #333; color: #fff; display: inline-block;}
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #333; color: #fff; display: inline-block;}
         .status-running { background: rgba(0, 255, 136, 0.1); color: var(--accent); border: 1px solid var(--accent); }
-        .status-exited { background: rgba(255, 85, 85, 0.1); color: #ff5555; border: 1px solid #ff5555; }
+        .status-exited { background: rgba(255, 85, 85, 0.1); color: var(--danger); border: 1px solid var(--danger); }
 
-        .logs-section { flex-grow: 1; display: flex; flex-direction: column; margin-bottom: 0; min-height: 150px; }
+        .logs-section { flex-grow: 1; display: flex; flex-direction: column; margin-bottom: 0; min-height: 180px; }
         .logs-container {
-            background: #050505; color: #00ff88; font-family: 'Courier New', Courier, monospace; font-size: 12px;
-            padding: 10px; border-radius: 4px; overflow-y: auto; white-space: pre-wrap;
-            border: 1px solid #333; line-height: 1.3; flex-grow: 1; 
+            background: #050505; color: var(--accent); font-family: 'Courier New', Courier, monospace; font-size: 12px;
+            padding: 12px; border-radius: 4px; overflow-y: auto; white-space: pre-wrap;
+            border: 1px solid #222; line-height: 1.4; flex-grow: 1; 
         }
         
         /* Footer */
         footer { 
             display: flex; justify-content: space-between; align-items: center; 
-            border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; 
-            font-size: 12px; color: var(--text-muted); flex-shrink: 0; 
+            border-top: 1px solid #2a2a2a; padding: 12px 25px; 
+            font-size: 12px; color: var(--text-muted); flex-shrink: 0; background: var(--bg);
         }
 
         /* Scrollbar styling */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #666; }
         
-        .error-msg { color: #ff5555; background: #220000; padding: 5px; border-radius: 4px; margin-bottom: 10px; text-align: center; font-size: 13px; border: 1px solid #ff5555;}
+        .error-msg { color: var(--danger); background: #220000; padding: 8px; border-radius: 4px; margin-bottom: 15px; text-align: center; font-size: 13px; border: 1px solid var(--danger); display: none;}
     </style>
 </head>
 <body>
@@ -152,139 +216,202 @@
         </div>
     </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" class="container">
-        <header>
-            <h1>⏣ SynsetMonitor</h1>
-            <button id="logout-btn">Cerrar Sesión</button>
-        </header>
+    <!-- App Layout -->
+    <div id="app-layout">
         
-        <div id="api-error" class="error-msg" style="display: none;">No se pudo conectar con la API o se perdió la conexión. Reintentando...</div>
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>⏣ Synset</h2>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active" data-target="view-dashboard">Dashboard General</div>
+                <div class="nav-item" data-target="view-system">Deep System <span class="module-badge">v1.1</span></div>
+                <!-- Future Modules placeholders -->
+                <!-- <div class="nav-item">Deep Docker</div> -->
+                <!-- <div class="nav-item">Advanced Network</div> -->
+            </div>
+            <div class="sidebar-footer">
+                v1.1.0 Modular Edition
+            </div>
+        </nav>
 
-        <!-- Upper Grid: 2x3 metrics -->
-        <div class="metrics-grid">
-            <div class="card">
-                <h3>Procesador (CPU)</h3>
-                <div class="metric-value" id="cpu-val">0%</div>
-                <div class="metric-subtitle" id="cpu-sub">Temperatura: N/A</div>
-                <div class="progress-bg"><div class="progress-fill" id="cpu-bar"></div></div>
-            </div>
-            <div class="card">
-                <h3>Memoria RAM</h3>
-                <div class="metric-value" id="ram-val">0 GB</div>
-                <div class="metric-subtitle" id="ram-sub">0 GB Libres de 0 GB</div>
-                <div class="progress-bg"><div class="progress-fill" id="ram-bar"></div></div>
-            </div>
-            <div class="card">
-                <h3>Almacenamiento</h3>
-                <div class="metric-value" id="disk-val">0 GB</div>
-                <div class="metric-subtitle" id="disk-sub">0 GB Libres de 0 GB</div>
-                <div class="progress-bg"><div class="progress-fill" id="disk-bar"></div></div>
-            </div>
-            <div class="card">
-                <h3>Uptime del Servidor</h3>
-                <div class="metric-value" id="uptime-val">0d 0h 0m</div>
-                <div class="metric-subtitle" id="uptime-sub">Load Avg: 0, 0, 0</div>
-            </div>
-            <div class="card">
-                <h3>Red (E/S)</h3>
-                <div class="metric-value" id="net-val">Calculando...</div>
-                <div class="metric-subtitle" id="net-sub">Enviado: - MB/s</div>
-            </div>
-            <div class="card">
-                <h3>Procesos Activos</h3>
-                <div class="metric-value" id="procs-val">0</div>
-                <div class="metric-subtitle" id="procs-sub">Total en ejecución</div>
-            </div>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <h1 id="view-title">Dashboard General</h1>
+                <div class="header-actions">
+                    <span class="module-badge" id="conn-status" style="color:var(--accent); border-color:var(--accent);">Conectado</span>
+                    <button id="logout-btn">Cerrar Sesión</button>
+                </div>
+            </header>
+            
+            <div id="api-error" class="error-msg">Perdida la conexión con el Host. Reintentando...</div>
 
-        <div class="layout-lower">
-            <!-- 2-cols for Tables -->
-            <div class="tables-grid">
-                <div class="section">
-                    <div class="section-header">Contenedores Docker</div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Estado</th>
-                                    <th>Imagen</th>
-                                    <th>Puertos</th>
-                                </tr>
-                            </thead>
-                            <tbody id="docker-tbody">
-                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
-                            </tbody>
-                        </table>
+            <!-- Smart Alerts Tray -->
+            <div id="alerts-tray"></div>
+
+            <!-- VIEW: General Dashboard -->
+            <div id="view-dashboard" class="view active">
+                <div class="metrics-grid">
+                    <div class="card" id="card-cpu">
+                        <h3>Procesador (CPU)</h3>
+                        <div class="metric-value" id="cpu-val">0%</div>
+                        <div class="metric-subtitle" id="cpu-sub">Temperatura: N/A</div>
+                        <div class="progress-bg"><div class="progress-fill" id="cpu-bar"></div></div>
+                    </div>
+                    <div class="card" id="card-ram">
+                        <h3>Memoria RAM</h3>
+                        <div class="metric-value" id="ram-val">0 GB</div>
+                        <div class="metric-subtitle" id="ram-sub">0 GB Libres de 0 GB</div>
+                        <div class="progress-bg"><div class="progress-fill" id="ram-bar"></div></div>
+                    </div>
+                    <div class="card" id="card-disk">
+                        <h3>Almacenamiento</h3>
+                        <div class="metric-value" id="disk-val">0 GB</div>
+                        <div class="metric-subtitle" id="disk-sub">0 GB Libres de 0 GB</div>
+                        <div class="progress-bg"><div class="progress-fill" id="disk-bar"></div></div>
+                    </div>
+                    <div class="card">
+                        <h3>Uptime & Load</h3>
+                        <div class="metric-value" id="uptime-val">0d 0h 0m</div>
+                        <div class="metric-subtitle" id="uptime-sub">Load Avg: 0, 0, 0</div>
+                    </div>
+                    <div class="card">
+                        <h3>Red en Vivo (E/S)</h3>
+                        <div class="metric-value" id="net-val">Calculando...</div>
+                        <div class="metric-subtitle" id="net-sub">Enviado: - MB/s</div>
+                    </div>
+                    <div class="card">
+                        <h3>Procesos Activos</h3>
+                        <div class="metric-value" id="procs-val">0</div>
+                        <div class="metric-subtitle" id="procs-sub">Total en ejecución host</div>
                     </div>
                 </div>
 
-                <div class="section">
-                    <div class="section-header">Top 5 Procesos (por uso de recurso)</div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>PID</th>
-                                    <th>Nombre</th>
-                                    <th>CPU %</th>
-                                    <th>RAM %</th>
-                                </tr>
-                            </thead>
-                            <tbody id="top-tbody">
-                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
-                            </tbody>
-                        </table>
+                <div class="layout-lower">
+                    <div class="tables-grid">
+                        <div class="section">
+                            <div class="section-header">Contenedores Docker</div>
+                            <div class="table-container">
+                                <table>
+                                    <thead><tr><th>Nombre</th><th>Estado</th><th>Imagen</th><th>Puertos</th></tr></thead>
+                                    <tbody id="docker-tbody">
+                                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-header">Top 5 Procesos (CPU & RAM)</div>
+                            <div class="table-container">
+                                <table>
+                                    <thead><tr><th>PID</th><th>Nombre</th><th>CPU %</th><th>RAM %</th></tr></thead>
+                                    <tbody id="top-tbody">
+                                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section logs-section">
+                        <div class="section-header">Eventos Tracker (Últimas 50 líneas)</div>
+                        <div class="logs-container" id="logs-container">Cargando eventos...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Logs -->
-            <div class="section logs-section">
-                <div class="section-header">Registros del Sistema (últimas 50 líneas)</div>
-                <div class="logs-container" id="logs-container">Cargando eventos...</div>
+            <!-- VIEW: Deep System Module -->
+            <div id="view-system" class="view">
+                <style> .alert-text { color: var(--warning); font-weight: bold;} .danger-text { color: var(--danger); font-weight: bold;} </style>
+                <div class="metrics-grid">
+                    <div class="card">
+                        <h3>CPU IO Wait (Cuello Secundario)</h3>
+                        <div class="metric-value" id="sys-iowait">0.0%</div>
+                        <div class="metric-subtitle">Si supera el 10% el disco es lento</div>
+                    </div>
+                    <div class="card">
+                        <h3>CPU Steal Time (VM Lag)</h3>
+                        <div class="metric-value" id="sys-steal">0.0%</div>
+                        <div class="metric-subtitle">Vecinos de VPS consumiendo tu CPU real</div>
+                    </div>
+                    <div class="card">
+                        <h3>CPU Load Status</h3>
+                        <div class="metric-value" id="sys-loadstatus">Normal</div>
+                        <div class="metric-subtitle" id="sys-loadsub">Basado en Load vs Cores</div>
+                    </div>
+                    <div class="card">
+                        <h3>Swap Memory Total</h3>
+                        <div class="metric-value" id="sys-swap-used">0.0 GB</div>
+                        <div class="metric-subtitle" id="sys-swap-sub">De 0.0 GB Total</div>
+                        <div class="progress-bg"><div class="progress-fill" id="sys-swap-bar"></div></div>
+                    </div>
+                    <div class="card">
+                        <h3>Swap Paging In (Lectura)</h3>
+                        <div class="metric-value" id="sys-sin">0 b/s</div>
+                        <div class="metric-subtitle">Bytes del disco a RAM</div>
+                    </div>
+                    <div class="card">
+                        <h3>Swap Paging Out (Escritura)</h3>
+                        <div class="metric-value" id="sys-sout">0 b/s</div>
+                        <div class="metric-subtitle">Bytes de la RAM al disco</div>
+                    </div>
+                </div>
+                <div class="section flex-grow-1" style="flex-grow: 1;">
+                    <div class="section-header">Diagnósticos Inteligentes</div>
+                    <div class="table-container" style="color: var(--text-muted); font-size: 13px; line-height: 1.6; padding: 10px;">
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 15px;">
+                            <li><strong style="color: #fff;">¿Qué es IO Wait?</strong> Indica el tiempo que el procesador está inactivo esperando a que un disco conteste. Si ves una carga de sistema ralentizada pero el CPU usage normal, el problema es IO Wait Alto.</li>
+                            <li><strong style="color: #fff;">¿Qué es Swap Paging?</strong> Cuando la RAM física está llena, el sistema operativo usa el disco (Swap). Un volumen alto de Swap IN / OUT constantes es una emergencia de rendimiento.</li>
+                            <li><strong style="color: #fff;">¿Qué es CPU Steal Time?</strong> Exclusivo de servidores virtuales (VPS / Cloud). Es la cantidad de tiempo de CPU hipervisor que los hostings te están robando o dando a otras máquinas vecinas.</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <footer>
-            <span id="last-refresh">Última actualización: --:--:--</span>
-            <span>SynsetMonitor v1.0.0</span>
-        </footer>
+            <footer>
+                <span id="last-refresh">Última actualización: --:--:--</span>
+                <span>Version Modular 1.1.0</span>
+            </footer>
+        </main>
     </div>
 
     <script>
         // DOM Elements
         const loginScreen = document.getElementById('login-screen');
-        const dashboard = document.getElementById('dashboard');
+        const appLayout = document.getElementById('app-layout');
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
         const logoutBtn = document.getElementById('logout-btn');
         const apiError = document.getElementById('api-error');
+        const connBadge = document.getElementById('conn-status');
 
         let refreshInterval;
         let lastNet = { bytes_sent: 0, bytes_recv: 0, time: 0 };
+        let lastSwap = { sin: 0, sout: 0, time: 0 };
+        let activeAlerts = new Set(); // To prevent spam
 
         // Auth
         const getToken = () => localStorage.getItem('synset_token');
         const setToken = (token) => localStorage.setItem('synset_token', token);
         const clearToken = () => localStorage.removeItem('synset_token');
 
-        function showDashboard() {
+        function showApp() {
             loginScreen.style.display = 'none';
-            dashboard.style.display = 'flex';
+            appLayout.style.display = 'flex';
             loadData();
             refreshInterval = setInterval(loadData, 10000);
         }
 
         function showLogin() {
             loginScreen.style.display = 'flex';
-            dashboard.style.display = 'none';
+            appLayout.style.display = 'none';
             clearToken();
             if(refreshInterval) clearInterval(refreshInterval);
         }
 
-        if (getToken()) showDashboard(); else showLogin();
+        if (getToken()) showApp(); else showLogin();
 
         // Login Handler
         loginForm.addEventListener('submit', async (e) => {
@@ -302,7 +429,7 @@
                 if (res.ok) {
                     const data = await res.json();
                     setToken(data.access_token);
-                    showDashboard();
+                    showApp();
                 } else {
                     loginError.textContent = "Usuario o contraseña inválidos";
                     loginError.style.display = 'block';
@@ -315,20 +442,48 @@
 
         logoutBtn.addEventListener('click', () => { showLogin(); });
 
+        // Sidebar Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                // Update active nav
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Update title
+                document.getElementById('view-title').textContent = item.childNodes[0].nodeValue.trim();
+
+                // Swap views
+                const target = item.getAttribute('data-target');
+                document.querySelectorAll('.view').forEach(v => {
+                    v.classList.remove('active');
+                    if(v.id === target) v.classList.add('active');
+                });
+            });
+        });
+
+        // API Fetch Wrapper
         async function fetchAPI(endpoint) {
             const token = getToken();
             if(!token) { showLogin(); return null; }
             try {
                 const res = await fetch(endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.status === 401) { showLogin(); return null; }
+                
                 apiError.style.display = 'none';
+                connBadge.style.color = 'var(--accent)';
+                connBadge.style.borderColor = 'var(--accent)';
+                connBadge.textContent = 'Conectado';
                 return res;
             } catch (err) {
                 apiError.style.display = 'block';
+                connBadge.style.color = 'var(--danger)';
+                connBadge.style.borderColor = 'var(--danger)';
+                connBadge.textContent = 'Desconectado';
                 return null;
             }
         }
 
+        // Helpers
         function formatUptime(seconds) {
             const d = Math.floor(seconds / (3600*24));
             const h = Math.floor(seconds % (3600*24) / 3600);
@@ -337,27 +492,76 @@
             return `${h}h ${m}m`;
         }
 
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024, dm = 2, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i] + '/s';
+        }
+
+        // Smart Alerts Function
+        function triggerAlert(id, title, msg, type = 'danger') {
+            if (activeAlerts.has(id)) return; // Prevents spamming
+
+            activeAlerts.add(id);
+            const tray = document.getElementById('alerts-tray');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert-toast ${type}`;
+            alertDiv.innerHTML = `
+                <div><strong>${title}</strong><br><span style="color:#ddd">${msg}</span></div>
+                <button class="alert-close">&times;</button>
+            `;
+            
+            // Auto remove after 8 seconds
+            const t = setTimeout(() => closeAlert(), 8000);
+            
+            const closeAlert = () => {
+                alertDiv.style.animation = 'fadeOut 0.3s forwards';
+                setTimeout(() => { alertDiv.remove(); activeAlerts.delete(id); }, 300);
+                clearTimeout(t);
+            };
+            
+            alertDiv.querySelector('.alert-close').addEventListener('click', closeAlert);
+            
+            tray.prepend(alertDiv);
+            if(tray.children.length > 3) tray.lastChild.remove(); // Keep max 3 alerts visible
+        }
+
+        // Main Data Load Process
         async function loadData() {
             try {
-                // System Metrics
+                // System Metrics -> affects General & Deep System
                 const sysRes = await fetchAPI('/metrics/system');
                 if (sysRes && sysRes.ok) {
                     const sys = await sysRes.json();
                     
+                    // -- DASHBOARD GENERAL --
+                    
                     // CPU + Temp
                     document.getElementById('cpu-val').textContent = sys.cpu.usage + '%';
-                    document.getElementById('cpu-bar').style.width = sys.cpu.usage + '%';
+                    const cpuBar = document.getElementById('cpu-bar');
+                    cpuBar.style.width = sys.cpu.usage + '%';
                     document.getElementById('cpu-sub').textContent = sys.cpu.temp !== null ? `Temperatura: ${sys.cpu.temp}°C` : 'Temperatura: N/A';
+                    
+                    // CPU Smart Alerts Color Modifiers
+                    document.getElementById('card-cpu').className = 'card ' + (sys.cpu.usage > 90 ? 'card-danger' : (sys.cpu.usage > 70 ? 'card-warning' : ''));
+                    cpuBar.className = 'progress-fill ' + (sys.cpu.usage > 90 ? 'danger' : (sys.cpu.usage > 70 ? 'warning' : ''));
+                    if(sys.cpu.usage > 85) triggerAlert('cpu_high', 'CPU Crítico', `Uso sostenido en ${sys.cpu.usage}%`);
 
                     // RAM
                     document.getElementById('ram-val').textContent = sys.ram.used + ' GB';
                     document.getElementById('ram-sub').textContent = `${sys.ram.available} GB Libres de ${sys.ram.total} GB`;
-                    document.getElementById('ram-bar').style.width = sys.ram.percent + '%';
+                    const ramBar = document.getElementById('ram-bar');
+                    ramBar.style.width = sys.ram.percent + '%';
+                    
+                    document.getElementById('card-ram').className = 'card ' + (sys.ram.percent > 90 ? 'card-danger' : (sys.ram.percent > 80 ? 'card-warning' : ''));
+                    ramBar.className = 'progress-fill ' + (sys.ram.percent > 90 ? 'danger' : (sys.ram.percent > 80 ? 'warning' : ''));
+                    if(sys.ram.percent > 95) triggerAlert('ram_high', 'RAM Exhausta', `Uso de RAM en ${sys.ram.percent}%`);
 
                     // Disk
                     document.getElementById('disk-val').textContent = sys.disk.used + ' GB';
                     document.getElementById('disk-sub').textContent = `${sys.disk.free} GB Libres de ${sys.disk.total} GB`;
                     document.getElementById('disk-bar').style.width = sys.disk.percent + '%';
+                    if(sys.disk.percent > 95) triggerAlert('disk_high', 'Almacenamiento Crítico', `Partición casi llena (${sys.disk.percent}%)`);
 
                     // Uptime & Load Avg
                     document.getElementById('uptime-val').textContent = formatUptime(sys.uptime);
@@ -369,10 +573,9 @@
                     // Network Calculation
                     const now = Date.now();
                     if (lastNet.time !== 0) {
-                        const elapsedSeconds = (now - lastNet.time) / 1000;
-                        const recvRate = (sys.network.bytes_recv - lastNet.bytes_recv) / elapsedSeconds / (1024*1024);
-                        const sentRate = (sys.network.bytes_sent - lastNet.bytes_sent) / elapsedSeconds / (1024*1024);
-                        
+                        const el = (now - lastNet.time) / 1000;
+                        const recvRate = (sys.network.bytes_recv - lastNet.bytes_recv) / el / (1024*1024);
+                        const sentRate = (sys.network.bytes_sent - lastNet.bytes_sent) / el / (1024*1024);
                         document.getElementById('net-val').textContent = `↓ ${recvRate.toFixed(2)} MB/s`;
                         document.getElementById('net-sub').textContent = `↑ ${sentRate.toFixed(2)} MB/s`;
                     }
@@ -380,19 +583,66 @@
                     lastNet.bytes_recv = sys.network.bytes_recv;
                     lastNet.time = now;
 
-                    // Top Processes
+
+                    // -- DEEP SYSTEM MODULE --
+                    
+                    // IOWait
+                    const ioW = document.getElementById('sys-iowait');
+                    ioW.textContent = sys.cpu.iowait.toFixed(1) + '%';
+                    if(sys.cpu.iowait > 15) {
+                        ioW.className = 'metric-value danger-text';
+                        triggerAlert('iowait_high', 'Alarma IO Wait', `El disco está colapsando (IO Wait ${sys.cpu.iowait.toFixed(1)}%)`);
+                    } else if (sys.cpu.iowait > 5) {
+                        ioW.className = 'metric-value alert-text';
+                    } else ioW.className = 'metric-value';
+
+                    // Steal Time
+                    document.getElementById('sys-steal').textContent = sys.cpu.steal.toFixed(1) + '%';
+                    if(sys.cpu.steal > 5) {
+                        document.getElementById('sys-steal').className = 'metric-value danger-text';
+                        triggerAlert('steal_high', 'CPU Steal Activo', `El Hipervisor está robando ciclos (${sys.cpu.steal.toFixed(1)}%)`);
+                    } else document.getElementById('sys-steal').className = 'metric-value';
+                    
+                    // Deep Swap
+                    document.getElementById('sys-swap-used').textContent = sys.swap.used + ' GB';
+                    document.getElementById('sys-swap-sub').textContent = `Swap Ocupada: ${sys.swap.percent}% de ${sys.swap.total} GB Total`;
+                    document.getElementById('sys-swap-bar').style.width = sys.swap.percent + '%';
+                    if(sys.swap.percent > 50) {
+                        document.getElementById('sys-swap-bar').className = 'progress-fill danger';
+                        triggerAlert('swap_pressure', 'Presión de Swap Crítica', `Dependencia profunda en disco (${sys.swap.percent}%)`);
+                    }
+
+                    // Swap IO Paging Rates
+                    if (lastSwap.time !== 0) {
+                        const s_el = (now - lastSwap.time) / 1000;
+                        const sinRate = (sys.swap.sin - lastSwap.sin) / s_el;
+                        const soutRate = (sys.swap.sout - lastSwap.sout) / s_el;
+                        document.getElementById('sys-sin').textContent = formatBytes(sinRate);
+                        document.getElementById('sys-sout').textContent = formatBytes(soutRate);
+                    }
+                    lastSwap.sin = sys.swap.sin;
+                    lastSwap.sout = sys.swap.sout;
+                    lastSwap.time = now;
+
+                    // Load Status heuristic
+                    const coresApprox = sys.procs_count / 30; // Roughly guessing context
+                    const load1m = sys.load_avg[0];
+                    if (load1m > 10.0) document.getElementById('sys-loadstatus').innerHTML = '<span class="danger-text">Sistema Sobrecargado</span>';
+                    else if (load1m > 4.0) document.getElementById('sys-loadstatus').innerHTML = '<span class="alert-text">Carga Elevada</span>';
+                    else document.getElementById('sys-loadstatus').innerHTML = 'Normal';
+
+
+                    // Top Processes Logic
                     const topBody = document.getElementById('top-tbody');
                     if (sys.top_procs && sys.top_procs.length > 0) {
                         topBody.innerHTML = sys.top_procs.map(p => `
                             <tr>
                                 <td>${p.pid}</td>
                                 <td><strong>${p.name.substring(0,25)}</strong></td>
-                                <td style="color: var(--accent);">${p.cpu_percent}%</td>
+                                <td style="color: var(--warning);">${p.cpu_percent}%</td>
                                 <td>${p.memory_percent}%</td>
                             </tr>
                         `).join('');
-                    } else {
-                        topBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Sin datos</td></tr>`;
                     }
                 }
 
@@ -402,16 +652,23 @@
                     const dockers = await dockerRes.json();
                     const tbody = document.getElementById('docker-tbody');
                     if (dockers && dockers.error) {
-                         tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ff5555; padding: 15px;">Error: ${dockers.error}</td></tr>`;
+                         tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--danger); padding: 15px;">Error: ${dockers.error}</td></tr>`;
                     } else if (Array.isArray(dockers)) {
                         tbody.innerHTML = dockers.map(c => `
                             <tr>
-                                <td><strong>${c.name}</strong></td>
+                                <td><strong>${c.name.substring(0,20)}</strong></td>
                                 <td><span class="status-badge ${c.state === 'running' ? 'status-running' : 'status-exited'}">${c.state}</span></td>
-                                <td>${c.image}</td>
+                                <td style="color:#aaa">${c.image}</td>
                                 <td>${c.ports}</td>
                             </tr>
-                        `).join('') || '<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 15px;">No hay contenedores activos</td></tr>';
+                        `).join('') || '<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 15px;">No containers</td></tr>';
+                        
+                        // Smart Alert: check if any container exited
+                        dockers.forEach(c => {
+                            if (c.state === 'exited' || c.state === 'dead') {
+                                triggerAlert(`docker_${c.name}`, 'Servicio Caído', `Contenedor ${c.name} está inactivo.`);
+                            }
+                        });
                     }
                 }
 
@@ -423,8 +680,15 @@
                     
                     const isAtBottom = logsCont.scrollHeight - logsCont.clientHeight <= logsCont.scrollTop + 5;
                     logsCont.textContent = logs.join('\n');
-                    
                     if (isAtBottom) logsCont.scrollTop = logsCont.scrollHeight;
+                    
+                    // Smart Alerts: Parser de Eventos
+                    logs.forEach(l => {
+                        const checkLower = l.toLowerCase();
+                        if (checkLower.includes('oomkilled') || checkLower.includes('out of memory')) triggerAlert('log_oom', 'OOM Killer Triggered', 'Memoria exhausta detectada en logs.');
+                        if (checkLower.includes('segfault')) triggerAlert('log_seg', 'Segmentation Fault', 'Crash crítico reportado en kernel/logs.');
+                        if (checkLower.includes('connection refused')) triggerAlert('log_conn', 'Servicios Inaccesibles', 'Errores de "Connection Refused" activos.');
+                    });
                 }
 
                 // Footer Update
