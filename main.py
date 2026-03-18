@@ -12,7 +12,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="SynsetMonitor")
+__version__ = "1.0.0"
+
+app = FastAPI(title="SynsetMonitor", version=__version__)
 
 # Configuración psutil
 if os.environ.get("PROCFS_PATH"):

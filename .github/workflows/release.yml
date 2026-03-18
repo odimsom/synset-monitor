@@ -1,0 +1,25 @@
+name: Release SynsetMonitor
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Se dispara automáticamente cuando subas una etiqueta v1.0.0, v2.1.0, etc.
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false
+          prerelease: false
