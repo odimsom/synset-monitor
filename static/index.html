@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SynsetMonitor | Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%2300ff88%22>⏣</text></svg>">
     <style>
         :root {
             --bg: #0f0f0f;
@@ -14,9 +15,18 @@
             --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); font-family: var(--font); }
+        
+        body { 
+            background: var(--bg); color: var(--text); font-family: var(--font); 
+            height: 100vh; overflow: hidden; /* Force dashboard to fit 1080p without body scroll */
+        }
+        
         h1, h2, h3 { font-weight: 500; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        .container { 
+            height: 100%; display: flex; flex-direction: column; 
+            max-width: 1400px; margin: 0 auto; padding: 10px 20px; 
+        }
 
         /* Login Screen */
         #login-screen {
@@ -47,47 +57,78 @@
 
         /* Dashboard Layout */
         #dashboard { display: none; }
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #333; margin-bottom: 30px; }
-        header h1 { color: var(--accent); display: flex; align-items: center; gap: 10px; }
-        #logout-btn { background: transparent; color: var(--text-muted); width: auto; font-weight: normal; border: 1px solid #333; padding: 6px 15px; }
+        
+        header { 
+            padding-bottom: 10px; margin-bottom: 15px; border-bottom: 1px solid #333; 
+            display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; 
+        }
+        header h1 { color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 20px; }
+        #logout-btn { background: transparent; color: var(--text-muted); width: auto; font-weight: normal; border: 1px solid #333; padding: 4px 12px; border-radius: 4px; font-size: 13px; }
         #logout-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-        /* Grid */
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .card { background: var(--card); border-radius: 8px; padding: 25px; border-left: 3px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .card h3 { color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; margin-top: 0; }
-        .metric-value { font-size: 36px; font-weight: bold; margin-bottom: 10px; color: #fff; }
-        .metric-subtitle { font-size: 14px; color: var(--text-muted); }
+        /* Grid 2x3 metrics */
+        .metrics-grid { 
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); 
+            gap: 15px; margin-bottom: 15px; flex-shrink: 0; min-height: 220px;
+        }
+        .card { 
+            background: var(--card); border-radius: 6px; padding: 15px 20px; 
+            border-left: 3px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
+            display: flex; flex-direction: column; justify-content: center; 
+        }
+        .card h3 { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; margin-top: 0; }
+        .metric-value { font-size: 28px; font-weight: bold; margin-bottom: 5px; color: #fff; }
+        .metric-subtitle { font-size: 12px; color: var(--text-muted); }
 
         /* Progress Bar */
-        .progress-bg { background: #333; height: 8px; border-radius: 4px; margin-top: 15px; overflow: hidden; }
+        .progress-bg { background: #333; height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; width: 100%; }
         .progress-fill { background: var(--accent); height: 100%; width: 0%; transition: width 0.5s ease-out; }
 
-        /* Tables & Logs */
-        .section { background: var(--card); border-radius: 8px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .section-header { margin-bottom: 20px; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 10px;}
+        /* Tables & Logs section container */
+        .layout-lower {
+            display: flex; flex-direction: column; flex-grow: 1; gap: 15px; min-height: 0; /* Ensures flex children can shrink */
+        }
 
+        .tables-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            flex-shrink: 0; height: 30vh; /* Dynamic relative height */
+        }
+        .section { 
+            background: var(--card); border-radius: 6px; padding: 12px 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden; 
+        }
+        .section-header { margin-bottom: 10px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 8px; flex-shrink: 0;}
+        
+        .table-container { overflow-y: auto; flex-grow: 1; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { padding: 12px; border-bottom: 1px solid #333; }
-        th { color: var(--accent); font-weight: 500; font-size: 14px; }
-        td { font-size: 14px; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #333; color: #fff; display: inline-block;}
+        th, td { padding: 8px 10px; border-bottom: 1px solid #2a2a2a; }
+        th { color: var(--accent); font-weight: 500; font-size: 13px; position: sticky; top: 0; background: var(--card); }
+        td { font-size: 13px; }
+        .status-badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #333; color: #fff; display: inline-block;}
         .status-running { background: rgba(0, 255, 136, 0.1); color: var(--accent); border: 1px solid var(--accent); }
         .status-exited { background: rgba(255, 85, 85, 0.1); color: #ff5555; border: 1px solid #ff5555; }
 
+        .logs-section { flex-grow: 1; display: flex; flex-direction: column; margin-bottom: 0; min-height: 150px; }
         .logs-container {
-            background: #050505; color: #00ff88; font-family: 'Courier New', Courier, monospace; font-size: 13px;
-            padding: 15px; border-radius: 4px; height: 350px; overflow-y: auto; white-space: pre-wrap;
-            border: 1px solid #333; line-height: 1.4; margin-top: 15px;
+            background: #050505; color: #00ff88; font-family: 'Courier New', Courier, monospace; font-size: 12px;
+            padding: 10px; border-radius: 4px; overflow-y: auto; white-space: pre-wrap;
+            border: 1px solid #333; line-height: 1.3; flex-grow: 1; 
         }
         
+        /* Footer */
+        footer { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; 
+            font-size: 12px; color: var(--text-muted); flex-shrink: 0; 
+        }
+
         /* Scrollbar styling */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #666; }
         
-        .error-msg { color: #ff5555; margin-bottom: 20px; text-align: center; }
+        .error-msg { color: #ff5555; background: #220000; padding: 5px; border-radius: 4px; margin-bottom: 10px; text-align: center; font-size: 13px; border: 1px solid #ff5555;}
     </style>
 </head>
 <body>
@@ -118,13 +159,14 @@
             <button id="logout-btn">Cerrar Sesión</button>
         </header>
         
-        <div id="api-error" class="error-msg" style="display: none;">No se pudo conectar con la API. Reintentando...</div>
+        <div id="api-error" class="error-msg" style="display: none;">No se pudo conectar con la API o se perdió la conexión. Reintentando...</div>
 
+        <!-- Upper Grid: 2x3 metrics -->
         <div class="metrics-grid">
             <div class="card">
                 <h3>Procesador (CPU)</h3>
                 <div class="metric-value" id="cpu-val">0%</div>
-                <div class="metric-subtitle">Uso actual</div>
+                <div class="metric-subtitle" id="cpu-sub">Temperatura: N/A</div>
                 <div class="progress-bg"><div class="progress-fill" id="cpu-bar"></div></div>
             </div>
             <div class="card">
@@ -139,31 +181,76 @@
                 <div class="metric-subtitle" id="disk-sub">0 GB Libres de 0 GB</div>
                 <div class="progress-bg"><div class="progress-fill" id="disk-bar"></div></div>
             </div>
-        </div>
-
-        <div class="section">
-            <div class="section-header">Contenedores Docker Activos</div>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Estado</th>
-                            <th>Imagen</th>
-                            <th>Iniciado (Uptime)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="docker-tbody">
-                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando contenedores...</td></tr>
-                    </tbody>
-                </table>
+            <div class="card">
+                <h3>Uptime del Servidor</h3>
+                <div class="metric-value" id="uptime-val">0d 0h 0m</div>
+                <div class="metric-subtitle" id="uptime-sub">Load Avg: 0, 0, 0</div>
+            </div>
+            <div class="card">
+                <h3>Red (E/S)</h3>
+                <div class="metric-value" id="net-val">Calculando...</div>
+                <div class="metric-subtitle" id="net-sub">Enviado: - MB/s</div>
+            </div>
+            <div class="card">
+                <h3>Procesos Activos</h3>
+                <div class="metric-value" id="procs-val">0</div>
+                <div class="metric-subtitle" id="procs-sub">Total en ejecución</div>
             </div>
         </div>
 
-        <div class="section">
-            <div class="section-header">Eventos del Sistema (últimas 50 líneas)</div>
-            <div class="logs-container" id="logs-container">Cargando eventos...</div>
+        <div class="layout-lower">
+            <!-- 2-cols for Tables -->
+            <div class="tables-grid">
+                <div class="section">
+                    <div class="section-header">Contenedores Docker</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th>Imagen</th>
+                                    <th>Puertos</th>
+                                </tr>
+                            </thead>
+                            <tbody id="docker-tbody">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">Top 5 Procesos (por uso de recurso)</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>PID</th>
+                                    <th>Nombre</th>
+                                    <th>CPU %</th>
+                                    <th>RAM %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-tbody">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs -->
+            <div class="section logs-section">
+                <div class="section-header">Registros del Sistema (últimas 50 líneas)</div>
+                <div class="logs-container" id="logs-container">Cargando eventos...</div>
+            </div>
         </div>
+
+        <footer>
+            <span id="last-refresh">Última actualización: --:--:--</span>
+            <span>SynsetMonitor v1.1.0</span>
+        </footer>
     </div>
 
     <script>
@@ -176,15 +263,16 @@
         const apiError = document.getElementById('api-error');
 
         let refreshInterval;
+        let lastNet = { bytes_sent: 0, bytes_recv: 0, time: 0 };
 
-        // Auth Functions
+        // Auth
         const getToken = () => localStorage.getItem('synset_token');
         const setToken = (token) => localStorage.setItem('synset_token', token);
         const clearToken = () => localStorage.removeItem('synset_token');
 
         function showDashboard() {
             loginScreen.style.display = 'none';
-            dashboard.style.display = 'block';
+            dashboard.style.display = 'flex';
             loadData();
             refreshInterval = setInterval(loadData, 10000);
         }
@@ -196,14 +284,9 @@
             if(refreshInterval) clearInterval(refreshInterval);
         }
 
-        // Initialize state
-        if (getToken()) {
-            showDashboard();
-        } else {
-            showLogin();
-        }
+        if (getToken()) showDashboard(); else showLogin();
 
-        // Login Submit Handler
+        // Login Handler
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const u = document.getElementById('username').value;
@@ -232,20 +315,12 @@
 
         logoutBtn.addEventListener('click', () => { showLogin(); });
 
-        // API Fetch Wrapper
         async function fetchAPI(endpoint) {
             const token = getToken();
             if(!token) { showLogin(); return null; }
-
             try {
-                const res = await fetch(endpoint, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (res.status === 401) {
-                    showLogin();
-                    return null;
-                }
+                const res = await fetch(endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.status === 401) { showLogin(); return null; }
                 apiError.style.display = 'none';
                 return res;
             } catch (err) {
@@ -254,14 +329,14 @@
             }
         }
 
-        // Format date string from Docker StartedAt
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return date.toLocaleString();
+        function formatUptime(seconds) {
+            const d = Math.floor(seconds / (3600*24));
+            const h = Math.floor(seconds % (3600*24) / 3600);
+            const m = Math.floor(seconds % 3600 / 60);
+            if(d > 0) return `${d}d ${h}h ${m}m`;
+            return `${h}h ${m}m`;
         }
 
-        // Load all data
         async function loadData() {
             try {
                 // System Metrics
@@ -269,9 +344,10 @@
                 if (sysRes && sysRes.ok) {
                     const sys = await sysRes.json();
                     
-                    // CPU
+                    // CPU + Temp
                     document.getElementById('cpu-val').textContent = sys.cpu.usage + '%';
                     document.getElementById('cpu-bar').style.width = sys.cpu.usage + '%';
+                    document.getElementById('cpu-sub').textContent = sys.cpu.temp !== null ? `Temperatura: ${sys.cpu.temp}°C` : 'Temperatura: N/A';
 
                     // RAM
                     document.getElementById('ram-val').textContent = sys.ram.used + ' GB';
@@ -282,6 +358,42 @@
                     document.getElementById('disk-val').textContent = sys.disk.used + ' GB';
                     document.getElementById('disk-sub').textContent = `${sys.disk.free} GB Libres de ${sys.disk.total} GB`;
                     document.getElementById('disk-bar').style.width = sys.disk.percent + '%';
+
+                    // Uptime & Load Avg
+                    document.getElementById('uptime-val').textContent = formatUptime(sys.uptime);
+                    document.getElementById('uptime-sub').textContent = `Load Avg: ${sys.load_avg.join(', ')}`;
+
+                    // Procs
+                    document.getElementById('procs-val').textContent = sys.procs_count;
+
+                    // Network Calculation
+                    const now = Date.now();
+                    if (lastNet.time !== 0) {
+                        const elapsedSeconds = (now - lastNet.time) / 1000;
+                        const recvRate = (sys.network.bytes_recv - lastNet.bytes_recv) / elapsedSeconds / (1024*1024);
+                        const sentRate = (sys.network.bytes_sent - lastNet.bytes_sent) / elapsedSeconds / (1024*1024);
+                        
+                        document.getElementById('net-val').textContent = `↓ ${recvRate.toFixed(2)} MB/s`;
+                        document.getElementById('net-sub').textContent = `↑ ${sentRate.toFixed(2)} MB/s`;
+                    }
+                    lastNet.bytes_sent = sys.network.bytes_sent;
+                    lastNet.bytes_recv = sys.network.bytes_recv;
+                    lastNet.time = now;
+
+                    // Top Processes
+                    const topBody = document.getElementById('top-tbody');
+                    if (sys.top_procs && sys.top_procs.length > 0) {
+                        topBody.innerHTML = sys.top_procs.map(p => `
+                            <tr>
+                                <td>${p.pid}</td>
+                                <td><strong>${p.name.substring(0,25)}</strong></td>
+                                <td style="color: var(--accent);">${p.cpu_percent}%</td>
+                                <td>${p.memory_percent}%</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        topBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Sin datos</td></tr>`;
+                    }
                 }
 
                 // Docker Metrics
@@ -290,14 +402,14 @@
                     const dockers = await dockerRes.json();
                     const tbody = document.getElementById('docker-tbody');
                     if (dockers && dockers.error) {
-                         tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ff5555; padding: 15px;">No se pudo acceder a Docker: ${dockers.error}</td></tr>`;
+                         tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ff5555; padding: 15px;">Error: ${dockers.error}</td></tr>`;
                     } else if (Array.isArray(dockers)) {
                         tbody.innerHTML = dockers.map(c => `
                             <tr>
                                 <td><strong>${c.name}</strong></td>
                                 <td><span class="status-badge ${c.state === 'running' ? 'status-running' : 'status-exited'}">${c.state}</span></td>
                                 <td>${c.image}</td>
-                                <td>${formatDate(c.uptime)}</td>
+                                <td>${c.ports}</td>
                             </tr>
                         `).join('') || '<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 15px;">No hay contenedores activos</td></tr>';
                     }
@@ -310,14 +422,15 @@
                     const logsCont = document.getElementById('logs-container');
                     
                     const isAtBottom = logsCont.scrollHeight - logsCont.clientHeight <= logsCont.scrollTop + 5;
-                    
                     logsCont.textContent = logs.join('\n');
                     
-                    // Auto-scroll logic if user hasn't scrolled up
-                    if (isAtBottom) {
-                        logsCont.scrollTop = logsCont.scrollHeight;
-                    }
+                    if (isAtBottom) logsCont.scrollTop = logsCont.scrollHeight;
                 }
+
+                // Footer Update
+                const d = new Date();
+                document.getElementById('last-refresh').textContent = `Última actualización: ${d.toLocaleTimeString()}`;
+
             } catch (e) {
                 console.error("Error cargando dashboard:", e);
             }

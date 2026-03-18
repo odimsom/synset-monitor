@@ -1,4 +1,5 @@
 import os
+import time
 import psutil
 import docker
 from fastapi import FastAPI, Depends, HTTPException
@@ -56,11 +57,56 @@ def get_system_metrics(authorized: bool = Depends(verify_token)):
     except Exception:
         disk = psutil.disk_usage("/")
 
+    # Uptime
+    uptime_seconds = time.time() - psutil.boot_time()
+
+    # Temps
+    temp_c = None
+    if hasattr(psutil, "sensors_temperatures"):
+        try:
+            temps = psutil.sensors_temperatures()
+            if temps:
+                first_sensor = list(temps.values())[0]
+                if first_sensor:
+                    temp_c = round(first_sensor[0].current, 1)
+        except Exception:
+            pass
+
+    # Load Avg
+    try:
+        if hasattr(psutil, "getloadavg"):
+            load_avg = [round(x, 2) for x in psutil.getloadavg()]
+        else:
+            load_avg = [round(x, 2) for x in os.getloadavg()]
+    except Exception:
+        load_avg = [0.0, 0.0, 0.0]
+
+    # Procs count
+    active_procs = len(psutil.pids())
+
+    # Network
+    net = psutil.net_io_counters()
+
+    # Top processes
+    procs = []
+    for p in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+        try:
+            procs.append(p.info)
+        except Exception:
+            pass
+            
+    # Sort by cpu usage roughly
+    top_cpu = sorted(procs, key=lambda x: x.get('cpu_percent') or 0, reverse=True)[:5]
+    # Format memory percent dynamically
+    for p in top_cpu:
+        p['cpu_percent'] = round(p.get('cpu_percent') or 0, 1)
+        p['memory_percent'] = round(p.get('memory_percent') or 0, 1)
+
     def to_gb(bytes_val):
         return round(bytes_val / (1024**3), 2)
 
     return {
-        "cpu": {"usage": cpu},
+        "cpu": {"usage": cpu, "temp": temp_c},
         "ram": {
             "total": to_gb(ram.total),
             "used": to_gb(ram.used),
@@ -72,7 +118,15 @@ def get_system_metrics(authorized: bool = Depends(verify_token)):
             "used": to_gb(disk.used),
             "free": to_gb(disk.free),
             "percent": disk.percent
-        }
+        },
+        "uptime": uptime_seconds,
+        "load_avg": load_avg,
+        "procs_count": active_procs,
+        "network": {
+            "bytes_sent": net.bytes_sent,
+            "bytes_recv": net.bytes_recv
+        },
+        "top_procs": top_cpu
     }
 
 @app.get("/metrics/docker")
@@ -85,11 +139,27 @@ def get_docker_metrics(authorized: bool = Depends(verify_token)):
             started_at = c.attrs.get('State', {}).get('StartedAt', '')
             tags = c.image.tags
             image_name = tags[0] if tags else c.image.id[:12]
+            
+            # Extract ports
+            ports_str = ""
+            ports_info = c.attrs.get('NetworkSettings', {}).get('Ports', {})
+            if ports_info:
+                mappings = []
+                for p, maps in ports_info.items():
+                    if maps:
+                        for m in maps:
+                            host_port = m.get('HostPort', '')
+                            if host_port:
+                                mappings.append(f"{host_port}->{p}")
+                if mappings:
+                    ports_str = ", ".join(mappings)
+            
             res.append({
                 "name": c.name,
                 "state": c.status,
                 "image": image_name,
-                "uptime": started_at
+                "uptime": started_at,
+                "ports": ports_str or "Ninguno"
             })
         return res
     except Exception as e:
