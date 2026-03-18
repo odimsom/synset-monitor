@@ -4,6 +4,13 @@ All notable changes to **SynsetMonitor** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-18
+### Added
+- **Red Avanzada Module**: New dashboard tab built for deep network connection layer telemetry.
+- **TCP States Tracker**: Live tracking of ESTABLISHED, LISTEN, and TIME_WAIT socket states to detect web server connection leaks.
+- **Hardware Network Health**: Metrics capturing Dropped Packets (IN/OUT) and Corrupt Error Packets (IN/OUT) directly from `psutil` NIC stats.
+- **Network Smart Alerts**: Real-time push notifications for TCP exhaustion (`TIME_WAIT` > 1000) and severe packet collisions or firewall drops triggers.
+
 ## [1.2.0] - 2026-03-18
 ### Added
 - **Servicios y Docker Module**: New dashboard tab focusing on container statuses and API Service Level Agreement (SLA).

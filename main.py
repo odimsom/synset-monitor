@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 app = FastAPI(title="SynsetMonitor", version=__version__)
 
@@ -61,7 +61,7 @@ def get_healthchecks(authorized: bool = Depends(verify_token)):
         if not url: continue
         try:
             start = time.time()
-            req = urllib.request.Request(url, headers={'User-Agent': 'SynsetMonitor/1.2'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'SynsetMonitor/1.3'})
             with urllib.request.urlopen(req, timeout=3) as response:
                 elapsed = round((time.time() - start) * 1000)
                 results.append({"url": url, "status": str(response.getcode()), "latency_ms": elapsed})
@@ -112,6 +112,16 @@ def get_system_metrics(authorized: bool = Depends(verify_token)):
 
     # Network
     net = psutil.net_io_counters()
+
+    # TCP Connections
+    tcp_states = {}
+    try:
+        conns = psutil.net_connections(kind='tcp')
+        for c in conns:
+            st = str(c.status)
+            tcp_states[st] = tcp_states.get(st, 0) + 1
+    except Exception:
+        pass
     
     # Disk IO
     disk_io_info = None
@@ -190,7 +200,12 @@ def get_system_metrics(authorized: bool = Depends(verify_token)):
         "procs_count": active_procs,
         "network": {
             "bytes_sent": net.bytes_sent,
-            "bytes_recv": net.bytes_recv
+            "bytes_recv": net.bytes_recv,
+            "errin": getattr(net, 'errin', 0),
+            "errout": getattr(net, 'errout', 0),
+            "dropin": getattr(net, 'dropin', 0),
+            "dropout": getattr(net, 'dropout', 0),
+            "tcp": tcp_states
         },
         "top_procs": top_cpu
     }

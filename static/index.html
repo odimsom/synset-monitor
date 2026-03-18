@@ -228,10 +228,11 @@
             <div class="nav-menu">
                 <div class="nav-item active" data-target="view-dashboard">Dashboard General</div>
                 <div class="nav-item" data-target="view-system">Deep System</div>
-                <div class="nav-item" data-target="view-services">Servicios y Docker <span class="module-badge">v1.2</span></div>
+                <div class="nav-item" data-target="view-network">Red Avanzada <span class="module-badge">v1.3</span></div>
+                <div class="nav-item" data-target="view-services">Servicios y Docker</div>
             </div>
             <div class="sidebar-footer">
-                v1.2.0 Modular Edition
+                v1.3.0 Modular Telemetry
             </div>
         </nav>
 
@@ -351,6 +352,64 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- VIEW: Deep Network Module -->
+            <div id="view-network" class="view">
+                <div class="metrics-grid cols-4">
+                    <div class="card">
+                        <h3>TCP Established</h3>
+                        <div class="metric-value" style="color:var(--accent);" id="net-tcp-est">0</div>
+                        <div class="metric-subtitle">Conexiones Activas</div>
+                    </div>
+                    <div class="card">
+                        <h3>TCP Time Wait</h3>
+                        <div class="metric-value" style="color:var(--warning);" id="net-tcp-wait">0</div>
+                        <div class="metric-subtitle">Cierres Pendientes</div>
+                    </div>
+                    <div class="card">
+                        <h3>UDP/TCP Listening</h3>
+                        <div class="metric-value" id="net-tcp-listen">0</div>
+                        <div class="metric-subtitle">Puertos Abiertos</div>
+                    </div>
+                    <div class="card">
+                        <h3>Otros Estados TCP</h3>
+                        <div class="metric-value" id="net-tcp-others">0</div>
+                        <div class="metric-subtitle">SYN, FIN, CLOSE...</div>
+                    </div>
+                    
+                    <div class="card card-danger">
+                        <h3>Paquetes Errados (IN)</h3>
+                        <div class="metric-value danger-text" id="net-errin">0</div>
+                        <div class="metric-subtitle">Recibos Corruptos</div>
+                    </div>
+                    <div class="card card-danger">
+                        <h3>Paquetes Errados (OUT)</h3>
+                        <div class="metric-value danger-text" id="net-errout">0</div>
+                        <div class="metric-subtitle">Envíos Fallidos</div>
+                    </div>
+                    <div class="card card-warning">
+                        <h3>Paquetes Droppeados (IN)</h3>
+                        <div class="metric-value alert-text" id="net-dropin">0</div>
+                        <div class="metric-subtitle">Filtrados / Rechazados</div>
+                    </div>
+                     <div class="card card-warning">
+                        <h3>Paquetes Droppeados (OUT)</h3>
+                        <div class="metric-value alert-text" id="net-dropout">0</div>
+                        <div class="metric-subtitle">Pérdida por congestión</div>
+                    </div>
+                </div>
+
+                <div class="section flex-grow-1" style="flex-grow: 1;">
+                    <div class="section-header">Diagnósticos Inteligentes de Red</div>
+                    <div class="table-container" style="color: var(--text-muted); font-size: 13px; line-height: 1.6; padding: 10px;">
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 15px;">
+                            <li><strong style="color: #fff;">Errores de Red (IN/OUT):</strong> Si esto sube rápidamente, tienes hardware de red defectuoso o el cableado del Data Center está fallando gravemente.</li>
+                            <li><strong style="color: #fff;">Paquetes Droppeados:</strong> Normalmente por reglas estrictas de Firewall o un ataque DDoS (Congestión de buffers).</li>
+                            <li><strong style="color: #fff;">Estados TCP TIME_WAIT altos:</strong> Indica que tu servidor está abriendo y cerrando miles de micro-conexiones. Típico cuando tu servidor web backend no reusa conexiones persistentes o bajo estrés de crawlers. Una alerta se emitirá si superan las 1000 conexiones.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
             <!-- VIEW: Servicios y Docker Module -->
             <div id="view-services" class="view">
@@ -386,7 +445,7 @@
 
             <footer>
                 <span id="last-refresh">Última actualización: --:--:--</span>
-                <span>Version Modular 1.2.0</span>
+                <span>Version Modular 1.3.0</span>
             </footer>
         </main>
     </div>
@@ -572,6 +631,33 @@
                     lastNet.bytes_sent = sys.network.bytes_sent;
                     lastNet.bytes_recv = sys.network.bytes_recv;
                     lastNet.time = now;
+                    
+                    // DEEP NETWORK V1.3.0
+                    if (sys.network.tcp) {
+                        const tcp = sys.network.tcp;
+                        document.getElementById('net-tcp-est').textContent = tcp['ESTABLISHED'] || 0;
+                        document.getElementById('net-tcp-wait').textContent = tcp['TIME_WAIT'] || 0;
+                        document.getElementById('net-tcp-listen').textContent = tcp['LISTEN'] || 0;
+                        
+                        let others = 0;
+                        for (const [k, v] of Object.entries(tcp)) {
+                            if (k !== 'ESTABLISHED' && k !== 'TIME_WAIT' && k !== 'LISTEN' && k !== 'NONE') {
+                                others += v;
+                            }
+                        }
+                        document.getElementById('net-tcp-others').textContent = others;
+                        
+                        if ((tcp['TIME_WAIT'] || 0) > 1000) triggerAlert('tcp_wait', 'TCP Exhaustion', `Alert: >1000 conexiones en TIME_WAIT`);
+                    }
+
+                    document.getElementById('net-errin').textContent = sys.network.errin || 0;
+                    document.getElementById('net-errout').textContent = sys.network.errout || 0;
+                    document.getElementById('net-dropin').textContent = sys.network.dropin || 0;
+                    document.getElementById('net-dropout').textContent = sys.network.dropout || 0;
+                    
+                    if ((sys.network.errin || 0) > 100) triggerAlert('net_err', 'Network Interface Error', 'Recepción de paquetes corruptos/inválidos reportada hardware');
+                    if ((sys.network.dropin || 0) > 1000) triggerAlert('net_drop', 'Paquetes Rechazados', 'Drop rate elevado. Posible congestión severa');
+
 
                     // Deep System
                     const ioW = document.getElementById('sys-iowait');
