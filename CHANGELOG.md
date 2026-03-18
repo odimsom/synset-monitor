@@ -4,6 +4,21 @@ All notable changes to **SynsetMonitor** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-18
+### Added
+- **Servicios y Docker Module**: New dashboard tab focusing on container statuses and API Service Level Agreement (SLA).
+- **HTTP Health Checks**: Automated heartbeat engine fetching and timing remote endpoints configured via `.env` `TARGET_SERVICES`.
+- **Deep Storage Metrics**: Disk Latency and IOPS measuring for predicting write/read bottlenecks.
+- **Docker Restart Tracking**: Intelligent metric keeping track of Crash Loops (Restarts > 5 trigger critical alert).
+- **Smart Alerts Interface**: Slide-in notification system dynamically triggered by system faults (OOMKilled, High IOWait, High Swap, Exit 1 containers, CPU lags).
+- **Deep System Module**: New dashboard tab displaying CPU Steal Time, IO Wait limits, Swap Ins/Outs and memory pressure.
+- Sidebar Dashboard Navigation preventing re-loads for independent modules.
+- Refactored frontend structure allowing independent scaling of logic.
+
+### Changed
+- Refactored `index.html` into a modular application using Vanilla JS.
+- Default `.env.example` includes `TARGET_SERVICES` fallback.
+
 ## [1.0.0] - 2026-03-18
 
 ### Added
